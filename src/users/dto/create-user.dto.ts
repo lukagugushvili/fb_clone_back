@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -6,6 +7,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
+import { Types } from 'mongoose';
 import { UserRoles } from 'src/enum/user-roles';
 
 export class CreateUserDto {
@@ -27,4 +29,8 @@ export class CreateUserDto {
   @Length(8, 22)
   @IsString()
   password: string;
+
+  @IsOptional()
+  @IsArray()
+  posts?: Types.ObjectId[];
 }
