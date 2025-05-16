@@ -5,23 +5,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    console.log(token);
 
     if (!token) throw new UnauthorizedException('Token is required');
 
     try {
-      const decoded = this.jwtService.verifyAsync(token);
+      const decoded = await this.jwtService.verifyAsync(token);
       request.user = decoded;
     } catch (error) {
       console.error(`Token verification error: ${error.message}`);
