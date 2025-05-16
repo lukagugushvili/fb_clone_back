@@ -31,7 +31,9 @@ export class AuthService {
       return { message: 'User registered successfully', userId: user.id };
     } catch (error) {
       console.error(`Error registering user: ${error.message}`);
-      throw new BadRequestException('User registration failed');
+      throw new BadRequestException(
+        `User registration failed: ${error.message}!`,
+      );
     }
   }
 
@@ -52,7 +54,7 @@ export class AuthService {
       return { message: 'Login successful', access_token };
     } catch (error) {
       console.error(`Error logging in user: ${error.message}`);
-      throw new BadRequestException('User login failed');
+      throw new BadRequestException(`User login failed ${error.message}!`);
     }
   }
 }
