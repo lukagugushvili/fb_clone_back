@@ -73,9 +73,16 @@ export class AuthService {
     }
   }
 
+  async logout(userId: string, res: Response): Promise<any> {
+    await this.usersService.update(userId, { refresh_token: null });
+
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+  }
+
   private async generateTokens(payload: IPayload): Promise<ITokens> {
     const access_token = this.jwtService.sign(payload, {
-      secret: process.env.REFRESH_TOKEN_JWT_SECRET,
+      secret: process.env.ACCESS_TOKEN_JWT_SECRET,
       expiresIn: process.env.ACCESS_EXPIRES_IN,
     });
 

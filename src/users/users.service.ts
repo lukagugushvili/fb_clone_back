@@ -52,7 +52,6 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     try {
-      console.log('token', updateUserDto);
       if (updateUserDto.posts) {
         await this.removePostFromUser(id, updateUserDto.posts.toString());
       }
