@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -14,6 +15,7 @@ import { LoginResponse } from './responses/login.response';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { RequestUserResponse } from './responses/request-user.response';
 import { AuthRequest } from 'src/types/auth-request.interface';
+import { Response } from 'express';
 
 @Controller('/auth')
 export class AuthController {
@@ -27,8 +29,11 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
-    return this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<LoginResponse> {
+    return this.authService.login(loginDto, res);
   }
 
   @UseGuards(AuthGuard)

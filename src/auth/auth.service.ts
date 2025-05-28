@@ -10,6 +10,9 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterResponse } from './responses/register.response';
 import { LoginResponse } from './responses/login.response';
+import { IPayload } from 'src/types/payloads';
+import { ITokens } from 'src/types/tokens';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +40,7 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<LoginResponse> {
+  async login(loginDto: LoginDto, res: Response): Promise<LoginResponse> {
     const { email, password } = loginDto;
     try {
       const user = await this.usersService.findByEmail(email);
@@ -49,12 +52,58 @@ export class AuthService {
       }
 
       const payLoad = { userId: user.id, email, roles: user.role };
-      const access_token = this.jwtService.sign(payLoad);
 
-      return { message: 'Login successful', access_token };
+      const tokens = await this.generateTokens(payLoad);
+      await this.saveCookies(res, tokens);
+
+      const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS);
+      const hashedRefreshToken = await bcrypt.hash(
+        tokens.refresh_token,
+        saltRounds,
+      );
+
+      await this.usersService.update(user.id, {
+        refresh_token: hashedRefreshToken,
+      });
+
+      return { message: 'Login successful', tokens };
     } catch (error) {
       console.error(`Error logging in user: ${error.message}`);
       throw new BadRequestException(`User login failed ${error.message}!`);
     }
+  }
+
+  private async generateTokens(payload: IPayload): Promise<ITokens> {
+    const access_token = this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_TOKEN_JWT_SECRET,
+      expiresIn: process.env.ACCESS_EXPIRES_IN,
+    });
+
+    const refresh_token = this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_TOKEN_JWT_SECRET,
+      expiresIn: process.env.REFRESH_EXPIRES_IN,
+    });
+
+    return { access_token, refresh_token };
+  }
+
+  private async saveCookies(res: Response, tokens: ITokens): Promise<void> {
+    const { access_token, refresh_token } = tokens;
+
+    const isProd = process.env.NODE_ENV === 'production';
+
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 15 * 60 * 1000,
+      sameSite: 'lax',
+    });
+
+    res.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: isProd,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'lax',
+    });
   }
 }

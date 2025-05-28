@@ -52,6 +52,7 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     try {
+      console.log('token', updateUserDto);
       if (updateUserDto.posts) {
         await this.removePostFromUser(id, updateUserDto.posts.toString());
       }
@@ -69,9 +70,11 @@ export class UsersService {
         );
       }
 
-      const user = await this.userModel.findByIdAndUpdate(id, updateUserDto, {
-        new: true,
-      });
+      const user = await this.userModel.findByIdAndUpdate(
+        id,
+        { refresh_token: updateUserDto.refresh_token },
+        { new: true },
+      );
 
       if (!user) throw new NotFoundException('User not found');
 

@@ -21,6 +21,9 @@ export class User extends Document {
 
   @Prop([{ type: Types.ObjectId, ref: 'Post' }])
   posts: Types.ObjectId[];
+
+  @Prop()
+  refresh_token: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

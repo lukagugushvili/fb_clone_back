@@ -33,4 +33,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsArray()
   posts?: Types.ObjectId[];
+
+  @IsString()
+  @IsOptional()
+  refresh_token?: string;
 }
